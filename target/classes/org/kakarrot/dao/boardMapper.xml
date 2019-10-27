@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.kakarrot.dao.boardMapper">
+	<select id="selectOne" resultType="org.kakarrot.domain.BoardVO">
+		select *from tbl_board where bno = #{bno}
+	</select>
+	
+	<select id="selectFile" resultType="String">
+		select fname from tbl_board_attach where board_no = #{bno}
+	</select>
+
+	<select id="selectList" resultType="org.kakarrot.domain.BoardVO">
+	   <![CDATA[
+			select tb.* ,(count(*) over()) total from tbl_board tb where notice = 1
+			
+			UNION ALL
+			
+			select bno, title, content, writer, regdate, updatedate, notice, id, total from
+			(select rownum rn,tb.* from
+			(select  t.*, (count(*) over()) total from tbl_board t
+			where ${category} like '%${value}%' and notice = 0 order by bno desc) tb
+			where rownum <=#{page}*#{amount})
+			where rn >= (#{page}-1) * #{amount}
+		]]>
+		
+	</select>
+	
+	<select id="getCount" resultType="Integer">
+		select count(bno) from tbl_board
+	</select>
+
+
+	<insert id="insert">
+		insert into tbl_board(bno,title,content,writer,notice)
+		values(seq_board.nextval,#{title},#{content},#{writer},#{notice})
+	</insert>
+	
+	<insert id="insertFile">
+	insert into tbl_board_attach(board_no, fname)
+		values(seq_board.currval, #{fname})
+	</insert>
+
+
+</mapper>
